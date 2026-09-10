@@ -34,7 +34,11 @@ dist/bme280.chip.json: dist bme280.chip.json
 build:
 	mkdir -p build
 
+# No -Werror here: wokwi-api.h's wasm import/export attributes are unknown
+# to host compilers, and GCC and clang disagree on the flag that silences
+# the warning (-Wno-attributes vs -Wno-unknown-attributes). Both are
+# passed; whichever the compiler doesn't know is itself only a warning.
 host-test: build test_chip.c $(SOURCES) wokwi-api.h
-	cc -O2 -Wall -Wextra -Werror -std=c11 -Wno-unknown-attributes \
+	cc -O2 -Wall -Wextra -std=c11 -Wno-attributes -Wno-unknown-attributes \
 	    -Wno-unused-function -o build/test_chip test_chip.c -lm
 	./build/test_chip
