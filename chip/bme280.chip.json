@@ -1,8 +1,5 @@
 {
-  "version": 1,
   "name": "bme280",
   "author": "Elias Dwallo",
-  "license": "MIT",
-  "docs": "https://github.com/DwalloE/bme280-driver-from-datasheet/blob/main/chip/README.md",
   "pins": ["VCC", "GND", "SDA", "SCL"]
 }
