@@ -1,0 +1,22 @@
+# Pinned so that a clone reproduces the build this repo was tested with.
+
+CONFIG_IDF_TARGET="esp32"
+
+# -O2, as in projects 01 and 02: a driver that only behaves at -O0 is not
+# a driver. The host tests run at -O2 for the same reason.
+CONFIG_COMPILER_OPTIMIZATION_PERF=y
+
+# Deterministic serial output for the CI assertions in wokwi-ci.scenario.yaml.
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+CONFIG_LOG_TIMESTAMP_SOURCE_RTOS=y
+
+# 5 s task watchdog, left ON deliberately: the CI scenario runs past it, so
+# a starved idle task fails the build instead of shipping a reboot loop.
+CONFIG_ESP_TASK_WDT_EN=y
+CONFIG_ESP_TASK_WDT_TIMEOUT_S=5
+CONFIG_ESP_TASK_WDT_CHECK_IDLE_TASK_CPU0=y
+
+CONFIG_FREERTOS_CHECK_STACKOVERFLOW_CANARY=y
+
+# Wokwi's virtual ESP32 is a 4 MB module.
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
