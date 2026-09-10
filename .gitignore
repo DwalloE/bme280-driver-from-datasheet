@@ -1,0 +1,11 @@
+build/
+test/build/
+*.gcno
+*.gcda
+*.gcov
+managed_components/
+sdkconfig
+dependencies.lock
+# Simulator captures land at the root; annotated keepers live in docs/traces/.
+/*.vcd
+CLAUDE-HANDOFF.md
