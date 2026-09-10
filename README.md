@@ -99,15 +99,27 @@ I (10370) bme280-demo: alive t=10s
 
 ## The wire, captured
 
-Wokwi's logic analyzer sits on the bus (D0 = SDA, D1 = SCL;
-`wokwi.toml` writes `i2c-trace.vcd`). The firmware makes the captures
-worth keeping by design: boot probes 0x77 — where nothing lives — so every
-trace contains a real address NACK (SDA high through the 9th clock)
-alongside the healthy 0x76 traffic; then three forced conversions and the
-switch to normal mode. Annotated captures land in `docs/traces/`, and
-[`docs/i2c-failure-modes.md`](docs/i2c-failure-modes.md) is the field
-guide: what each failure looks like on the wire, what it looks like from
-firmware, and which `bme280_err_t` it becomes.
+Wokwi's logic analyzer sits on the bus (D0 = SDA, D1 = SCL) and CI
+captures every simulate run to VCD. The firmware makes the capture worth
+keeping by design — boot probes 0x77, where nothing lives, so the trace
+opens with a real failure signature next to the healthy traffic:
+
+```
+t=0.524005s  S addr 0x77 W NACK P            <- SDA high through the 9th clock: nobody home
+t=0.532670s  S addr 0x76 W ACK  P            <- same clock, one bit different: probe ACKed
+t=0.533205s  Sr addr 0x76 R ACK | 0x60 ACK   <- the chip id the error model pivots on
+t=0.549436s  S addr 0x76 W ACK | 0xF4 ACK | 0x25 ACK P    <- forced conversion trigger
+t=0.550188s  Sr addr 0x76 R ACK | 0x08 ACK   <- status.measuring, polled 10x over ~8 ms
+```
+
+The full annotated walkthrough — probe, identity, reset, both calibration
+bursts (the worked-example bytes visible on the wire), the forced-mode
+poll stretch, and a controller quirk that only a wire capture can show —
+is [`docs/traces/README.md`](docs/traces/README.md), with the VCD, a
+decoded transcript, and the decoder script alongside.
+[`docs/i2c-failure-modes.md`](docs/i2c-failure-modes.md) is the matching
+field guide: what each failure looks like on the wire, what it looks like
+from firmware, and which `bme280_err_t` it becomes.
 
 ## The bug gallery
 
