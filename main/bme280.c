@@ -106,9 +106,9 @@ static void parse_calib(bme280_calib_t *c, const uint8_t *bank0 /* 26B @0x88 */,
     c->dig_H3 = bank1[2];                              /* 0xE3      */
     c->dig_H4 = (int16_t)(((int16_t)(int8_t)bank1[3] << 4)   /* 0xE4 */
                           | (bank1[4] & 0x0F));               /* 0xE5[3:0] */
-    c->dig_H5 = (int16_t)(((int16_t)(int8_t)bank1[6] << 4)   /* 0xE6 */
+    c->dig_H5 = (int16_t)(((int16_t)(int8_t)bank1[5] << 4)   /* 0xE6 */
                           | (bank1[4] >> 4));                 /* 0xE5[7:4] */
-    c->dig_H6 = (int8_t)bank1[5];                      /* 0xE7      */
+    c->dig_H6 = (int8_t)bank1[6];                      /* 0xE7      */
 }
 
 /* A bus that ACKs but returns a constant is indistinguishable from a
@@ -186,7 +186,8 @@ static uint32_t compensate_humidity(const bme280_t *dev, int32_t adc_H)
                  (((((((v_x1_u32r * ((int32_t)c->dig_H6)) >> 10) *
                       (((v_x1_u32r * ((int32_t)c->dig_H3)) >> 11) +
                        ((int32_t)32768))) >> 10) +
-                    ((int32_t)2097152)) * ((int32_t)c->dig_H2) + 8192) >> 14);
+                   ((int32_t)2097152)) * ((int32_t)c->dig_H2) +
+                  8192) >> 14));
     v_x1_u32r = (v_x1_u32r - (((((v_x1_u32r >> 15) * (v_x1_u32r >> 15)) >> 7) *
                                ((int32_t)c->dig_H1)) >> 4));
     v_x1_u32r = (v_x1_u32r < 0 ? 0 : v_x1_u32r);
