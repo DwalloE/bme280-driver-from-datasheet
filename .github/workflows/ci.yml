@@ -1,0 +1,80 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # Everything the driver claims, asserted on every commit: the naive
+  # control falls into the stuck-bus and empty-bus traps, the real driver
+  # steps around them, all 65 injected faults surface as the mapped
+  # error, and no branch in bme280.c escapes coverage. No hardware, no
+  # secrets - runs on a fork.
+  host:
+    name: host tests (controls + fault sweep + branch coverage)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: controls, calibration traps, worked example, fault sweep, gate
+        run: make -C test
+
+      - name: keep the coverage summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence
+          path: |
+            test/build/gcov_summary.txt
+            test/build/*.gcov
+          if-no-files-found: error
+
+  # Builds the real firmware - the same bme280.c the host job tested -
+  # and runs it against Wokwi's simulated BME280, requiring compensated
+  # readings that the firmware itself judged plausible (5 < T < 45 degC).
+  firmware:
+    name: build + simulate (ESP32 + BME280)
+    runs-on: ubuntu-latest
+    env:
+      WOKWI_CLI_TOKEN: ${{ secrets.WOKWI_CLI_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: build with ESP-IDF v5.3
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: v5.3
+          target: esp32
+          command: idf.py build && idf.py uf2
+
+      - name: report image size
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: v5.3
+          target: esp32
+          command: idf.py size
+
+      # Skipped automatically on forks and on clones without the secret set.
+      # Get a free token at https://wokwi.com/dashboard/ci
+      - name: simulate - require in-range readings and the t=10s heartbeat
+        if: env.WOKWI_CLI_TOKEN != ''
+        uses: wokwi/wokwi-ci-action@v1
+        with:
+          token: ${{ secrets.WOKWI_CLI_TOKEN }}
+          path: /
+          # The scenario's last step waits for the t=10s heartbeat, so the
+          # 5 s task watchdog must stay quiet for the run to pass.
+          timeout: 25000
+          scenario: wokwi-ci.scenario.yaml
+          fail_text: 'E ('
+
+      - name: keep the firmware image and any captured trace
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: |
+            build/uf2.bin
+            build/bme280-driver-from-datasheet.elf
+            build/bme280-driver-from-datasheet.map
+            i2c-trace.vcd
+          if-no-files-found: warn

@@ -1,0 +1,19 @@
+# Wokwi CI scenario: real sensor readings must arrive, in range.
+#
+# The driver must verify the chip id, and every reported reading carries a
+# plausibility verdict computed in firmware (5 < T < 45 degC); waiting for
+# "-> plausible" asserts a compensated reading in range, not just boot
+# noise. The last step waits for the t=10s heartbeat so the simulation
+# outlives the 5 s task watchdog (01's lesson) - a starved idle task fails
+# this scenario instead of shipping. Total sim time ~12 s.
+name: "compensated BME280 readings arrive, in range"
+version: 1
+author: "Elias Dwallo"
+
+steps:
+  - wait-serial: "probe 0x77 (SDO high): no ACK, as expected"
+  - wait-serial: "chip id 0x60 verified"
+  - wait-serial: "forced mode: trigger, poll status.measuring, read"
+  - wait-serial: "-> plausible"
+  - wait-serial: "normal mode: free-running, standby 500 ms"
+  - wait-serial: "alive t=10s"

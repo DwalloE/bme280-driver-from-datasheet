@@ -1,0 +1,20 @@
+# Wokwi simulator / Wokwi CI configuration.
+#
+# `firmware` is a single image containing bootloader + partition table +
+# application, because Wokwi flashes one file. `idf.py uf2` produces exactly
+# that at build/uf2.bin:
+#
+#     idf.py build && idf.py uf2
+#
+# `elf` gives the simulator symbol names, so a crash shows a backtrace
+# instead of addresses.
+
+[wokwi]
+version = 1
+firmware = 'build/uf2.bin'
+elf = 'build/bme280-driver-from-datasheet.elf'
+
+# The logic analyzer's capture: D0 = SDA, D1 = SCL. Open in PulseView or
+# GTKWave with an I2C decoder to see the address NACK at 0x77, then the
+# healthy traffic at 0x76. The annotated keepers live in docs/traces/.
+vcdFile = 'i2c-trace.vcd'

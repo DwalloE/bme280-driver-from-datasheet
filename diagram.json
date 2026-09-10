@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "author": "Elias Dwallo",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-bme280",
+      "id": "bme1",
+      "top": -60,
+      "left": 300,
+      "attrs": { "temperature": "24.5", "pressure": "101325", "humidity": "42" }
+    },
+    {
+      "type": "wokwi-logic-analyzer",
+      "id": "la1",
+      "top": 180,
+      "left": 300,
+      "attrs": {}
+    }
+  ],
+  "connections": [
+    [ "bme1:VCC", "esp:3V3", "red", [ "v0" ] ],
+    [ "bme1:GND", "esp:GND.1", "black", [ "v0" ] ],
+    [ "bme1:SDA", "esp:21", "green", [ "v0" ] ],
+    [ "bme1:SCL", "esp:22", "yellow", [ "v0" ] ],
+
+    [ "esp:21", "la1:D0", "green", [ "v0" ] ],
+    [ "esp:22", "la1:D1", "yellow", [ "v0" ] ],
+    [ "esp:GND.2", "la1:GND", "black", [ "v0" ] ],
+
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ]
+  ]
+}
