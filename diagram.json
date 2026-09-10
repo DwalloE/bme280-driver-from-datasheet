@@ -11,7 +11,7 @@
       "attrs": {}
     },
     {
-      "type": "wokwi-bme280",
+      "type": "chip-bme280",
       "id": "bme1",
       "top": -60,
       "left": 300,

@@ -20,6 +20,12 @@ jobs:
       - name: controls, calibration traps, worked example, fault sweep, gate
         run: make -C test
 
+      # The simulated sensor is this repo's own custom chip; this replays
+      # the driver's I2C traffic against the chip's callbacks and requires
+      # the two independent section-8.2 implementations to agree.
+      - name: chip vs driver - the two datasheet readings must meet
+        run: make -C chip host-test
+
       - name: keep the coverage summary
         uses: actions/upload-artifact@v4
         with:
@@ -53,6 +59,13 @@ jobs:
           esp_idf_version: v5.3
           target: esp32
           command: idf.py size
+
+      # Wokwi has no built-in BME280, so the simulation runs this repo's
+      # own custom chip (chip/bme280.chip.c), compiled to wasm here.
+      - name: build the custom BME280 chip (wasm)
+        run: >
+          docker run --rm -v ${{ github.workspace }}:/src -w /src
+          wokwi/builder-clang-wasm make -C chip
 
       # Skipped automatically on forks and on clones without the secret set.
       # Get a free token at https://wokwi.com/dashboard/ci

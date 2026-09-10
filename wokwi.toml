@@ -14,6 +14,13 @@ version = 1
 firmware = 'build/uf2.bin'
 elf = 'build/bme280-driver-from-datasheet.elf'
 
+# The sensor is this repo's own custom chip (chip/bme280.chip.c) - Wokwi
+# has no built-in BME280 part. Build it with:
+#     docker run --rm -v "$PWD":/src -w /src wokwi/builder-clang-wasm make -C chip
+[[chip]]
+name = 'bme280'
+binary = 'chip/dist/bme280.chip.wasm'
+
 # The logic analyzer's capture: D0 = SDA, D1 = SCL. Open in PulseView or
 # GTKWave with an I2C decoder to see the address NACK at 0x77, then the
 # healthy traffic at 0x76. The annotated keepers live in docs/traces/.

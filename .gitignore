@@ -1,5 +1,7 @@
 build/
 test/build/
+chip/build/
+chip/dist/
 *.gcno
 *.gcda
 *.gcov

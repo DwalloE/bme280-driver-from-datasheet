@@ -22,7 +22,10 @@ Wokwi's browser editor compiles Arduino, not ESP-IDF, so that project runs
 [`browser-demo/sketch.ino`](browser-demo/sketch.ino), a clearly-labeled
 port whose transport is Wire.h — the register map, calibration parsing and
 fixed-point compensation are the same arithmetic; the fault-injected bus
-layer is not there, because it is the host suite's job. The canonical
+layer is not there, because it is the host suite's job. The sensor in that
+project is this repo's own custom chip
+([`chip/bme280.chip.c`](chip/bme280.chip.c) + `.json`, added to the Wokwi
+project as a custom chip), since Wokwi ships no BME280. The canonical
 driver is [`main/bme280.c`](main/bme280.c); CI builds it under ESP-IDF
 v5.3 and runs it against Wokwi's simulated BME280 on every commit,
 requiring compensated readings the firmware itself judged plausible.
@@ -79,6 +82,15 @@ I (10370) bme280-demo: alive t=10s
   returns 0xFF with a clean transport status, which is a valid-looking
   chip id to any driver that doesn't compare. Stage 0 of the suite proves
   a naive driver falls for it; only then does this one get credit for not.
+- **The simulated sensor is this repo's own custom chip.** Wokwi has no
+  built-in BME280, so [`chip/bme280.chip.c`](chip/bme280.chip.c)
+  implements the register file, access protocol, forced/normal timing and
+  worked-example calibration from the same datasheet — and inverts the
+  section 8.2 compensation numerically so the diagram's physical-unit
+  attrs come back out of the firmware's arithmetic. Driver and chip are
+  two independent readings of the document, and
+  [`chip/test_chip.c`](chip/test_chip.c) makes CI prove they meet:
+  [`chip/README.md`](chip/README.md).
 - **Fault injection as the control mechanism.** The mock bus can aim any
   of five fault types at any single bus transaction; the sweep walks every
   fault along every operation of init, configure and measure — 65 cases —
@@ -119,8 +131,9 @@ firmware, and which `bme280_err_t` it becomes.
 | stage 3 fault sweep | 5 fault types × every bus operation of init/configure/measure = 65 cases, each surfacing as the mapped error; poll-budget success and exhaustion both ways | CI, every commit |
 | stage 4 identity/args | BMP280 id rejected, erased-NVM calibration rejected, dig_P1=0 divide guard, every argument check, humidity clamps at 0 and 100 %RH | CI, every commit |
 | coverage gate | 100% of branches in `bme280.c` taken both ways (gcov), or the build fails | CI, every commit |
+| chip vs driver | the driver's I2C traffic replayed against the custom chip: two independent section-8.2 implementations must round-trip five operating points within quantisation | CI, every commit |
 | `idf.py build` | the same `bme280.c` compiles for ESP32 under ESP-IDF v5.3 | CI, every commit |
-| Wokwi CI scenario | simulated BME280: the 0x77 NACK demo, chip id verified, a compensated reading the firmware judged plausible (5 < T < 45 °C), the switch to normal mode, and the t=10s heartbeat that outlives the 5 s task watchdog | CI, when `WOKWI_CLI_TOKEN` is set |
+| Wokwi CI scenario | the custom-chip BME280 on a simulated ESP32: the 0x77 NACK demo, chip id verified, a compensated reading the firmware judged plausible (5 < T < 45 °C), the switch to normal mode, and the t=10s heartbeat that outlives the 5 s task watchdog | CI, when `WOKWI_CLI_TOKEN` is set |
 
 Host tests need only `cc` and `make`. The simulation step needs a free
 [Wokwi CI token](https://wokwi.com/dashboard/ci) and is skipped without
@@ -162,6 +175,8 @@ main/bme280.c             the driver. gated at 100% branch coverage.
 main/main.c               ESP-IDF v5.3 i2c_master binding + the demo app.
 test/mock_bus.c           the fault-injection bus: any fault, any transaction.
 test/test_bme280.c        controls first, then calibration/compensation/sweep.
+chip/bme280.chip.c        the simulated sensor itself, from the same datasheet.
+chip/test_chip.c          chip vs driver: the two 8.2 implementations must meet.
 docs/bus-interface.md     why the bus is injected; the road to the Zephyr port.
 docs/i2c-failure-modes.md each failure, on the wire and in the error model.
 wokwi-ci.scenario.yaml    CI demands plausible readings from the simulated part.
