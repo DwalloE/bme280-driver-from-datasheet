@@ -11,3 +11,4 @@ dependencies.lock
 # Simulator captures land at the root; annotated keepers live in docs/traces/.
 /*.vcd
 CLAUDE-HANDOFF.md
+wokwi-serial.log
