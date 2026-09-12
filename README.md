@@ -15,7 +15,8 @@ every commit.
 
 No hardware needed.
 
-**Simulator:** _saved Wokwi project link lands here_ — press play, then
+**Simulator:** [wokwi.com/projects/474771407250609153](https://wokwi.com/projects/474771407250609153)
+— press play, then
 type `r` (read), `i` (chip id), `c` (calibration dump) or `n` (NACK demo)
 into the serial monitor. One honest caveat, same as projects 01 and 02:
 Wokwi's browser editor compiles Arduino, not ESP-IDF, so that project runs
